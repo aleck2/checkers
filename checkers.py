@@ -45,8 +45,8 @@ class Coordinate():
     def __str__(self):
         return 'r: {}, c: {}'.format(self.r, self.c)
 
-     # def __contains__():
-     # TODO necessary?
+    def __eq__(self, obj):
+        return self.r == obj.r and self.c == obj.c
 
     def check_valid(self) -> bool:
         return self.r >= 0 and self.r < ROWS and self.c >= 0 and self.c < COLS
@@ -65,10 +65,21 @@ class Board:
     Origin is top left corner at 0,0
     """
     def __init__(self):
-        # board filled with pieces
+        # board filled with no pieces
         self.board = [[None for i in range(COLS)] for r in range(ROWS)]
-        
 
+        # board filed with X's going down
+        for r in range(3):
+            start = 1 if r % 2 == 0 else 0
+            for c in range(start, COLS, 2):
+                self.board[r][c] = Piece(Team.X, Direction.DOWN)
+
+        # board filed with O's going up
+        for r in range(COLS-1, COLS-4, -1):
+            start = 1 if r % 2 == 0 else 0
+            for c in range(start, COLS, 2):
+                self.board[r][c] = Piece(Team.O, Direction.UP)
+        
     def __str__(self):
         result = ''
         for i in range(ROWS):
@@ -84,20 +95,21 @@ class Board:
         return result
     
     def place(self, piece: Piece, coord: Coordinate) -> bool:
-        # if empty
-        # TDOO check subsetting okay
+        """ place a piece on coordinate. use primarily for testing"""
         if not self.board[coord.r][coord.c]:
-            self.board[coord.r][coord.c] = Piece(Team.X, Direction.DOWN)
+            # if empty (None)
+            self.board[coord.r][coord.c] = piece
             return True
         
         return False
 
-    def make_move(self, piece, old_coord: Coordinate, new_coord: Coordinate):
-        candidates = self.list_moves(piece)
+    def move(self, old_coord: Coordinate, new_coord: Coordinate) -> bool:
+        piece = self.board[old_coord.r][old_coord.c]
+        candidates = self.list_moves(old_coord)
 
         if new_coord in candidates:
             # place piece on new spot
-            self.board[new_coord.r][new_coord.c] = piece.team
+            self.board[new_coord.r][new_coord.c] = piece
 
             # remove piece from last spot
             self.board[old_coord.r][old_coord.c] = None
@@ -114,33 +126,22 @@ class Board:
             return moves
 
         if piece.direction == Direction.UP:
-            if self.check_up_left(piece, coord):
+            if coord.add(Move.UP_LEFT).check_valid():
                 moves.append(coord.add(Move.UP_LEFT))
-            if self.check_up_right(piece, coord):
+            if coord.add(Move.UP_RIGHT).check_valid():
                 moves.append(coord.add(Move.UP_RIGHT))
-        else:
-            if self.check_down_left(piece, coord):
+
+        elif piece.direction == Direction.DOWN:
+            if coord.add(Move.DOWN_LEFT).check_valid():
                 moves.append(coord.add(Move.DOWN_LEFT))
-            if self.check_down_right(piece, coord):
+            if coord.add(Move.DOWN_RIGHT).check_valid():
                 moves.append(coord.add(Move.DOWN_RIGHT))
 
+        else:
+            # log an error
+            print('* ERROR: piece at {}, {} has no direction'.format(coord.r, coord.c))
+
         return moves
-               
-    def check_up_left(self, piece: Piece, coord: Coordinate) -> bool:
-        new_coord = coord.add(Move.UP_LEFT)
-        return new_coord.check_valid()
-
-    def check_up_right(self, piece: Piece, coord: Coordinate) -> bool:
-        new_coord = coord.add(Move.UP_RIGHT)
-        return new_coord.check_valid()
-
-    def check_down_right(self, piece: Piece, coord: Coordinate) -> bool:
-        new_coord = coord.add(Move.DOWN_RIGHT)
-        return new_coord.check_valid()
-
-    def check_down_left(self, piece: Piece, coord: Coordinate) -> bool:
-        new_coord = coord.add(Move.UP_LEFT)
-        return new_coord.check_valid()
 
 
 board = Board()
