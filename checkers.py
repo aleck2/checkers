@@ -211,8 +211,10 @@ class Board:
         return None
 
 
+
 if __name__ == '__main__':
     def example_kills():
+        board = Board()
         print(board)
         board.move(Coordinate(2,1), Coordinate(3,2))
         print(board)
@@ -226,3 +228,4 @@ if __name__ == '__main__':
         print(board)
 
     example_kills()
+
